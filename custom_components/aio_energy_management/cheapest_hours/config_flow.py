@@ -16,7 +16,6 @@ import homeassistant.helpers.config_validation as cv
 
 from ..const import (
     CONF_ADD_FLEXIBLE,
-    CONF_ALLOW_DYNAMIC_ENTITIES,
     CONF_AREA,
     CONF_CALENDAR,
     CONF_DATA_PROVIDER_TYPE,
@@ -523,88 +522,146 @@ def _process_offset_input(
     return offset, entities
 
 
-def _get_offset_schema(
-    offset_data: dict[str, Any], allow_dynamic_entities: bool = True
-) -> vol.Schema:
+def _get_offset_schema(offset_data: dict[str, Any]) -> vol.Schema:
     """Get offset configuration schema."""
     start_offset = offset_data.get(CONF_START, {})
     end_offset = offset_data.get(CONF_END, {})
 
-    schema_dict = {
+    schema_dict: dict[Any, Any] = {
         vol.Optional(
             f"{CONF_START}_{CONF_HOURS}",
             description={"suggested_value": start_offset.get(CONF_HOURS)},
         ): int,
-    }
-
-    if allow_dynamic_entities:
-        schema_dict[
-            vol.Optional(
-                CONF_START_HOURS_ENTITY,
-                description={
-                    "suggested_value": offset_data.get(CONF_START_HOURS_ENTITY)
-                },
-            )
-        ] = selector.EntitySelector(
-            selector.EntitySelectorConfig(domain=["sensor", "input_number"]),
-        )
-
-    schema_dict[
         vol.Optional(
             f"{CONF_START}_{CONF_MINUTES}",
             description={"suggested_value": start_offset.get(CONF_MINUTES)},
-        )
-    ] = int
-
-    if allow_dynamic_entities:
-        schema_dict[
-            vol.Optional(
-                CONF_START_MINUTES_ENTITY,
-                description={
-                    "suggested_value": offset_data.get(CONF_START_MINUTES_ENTITY)
-                },
-            )
-        ] = selector.EntitySelector(
-            selector.EntitySelectorConfig(domain=["sensor", "input_number"]),
-        )
-
-    schema_dict[
+        ): int,
         vol.Optional(
             f"{CONF_END}_{CONF_HOURS}",
             description={"suggested_value": end_offset.get(CONF_HOURS)},
-        )
-    ] = int
-
-    if allow_dynamic_entities:
-        schema_dict[
-            vol.Optional(
-                CONF_END_HOURS_ENTITY,
-                description={"suggested_value": offset_data.get(CONF_END_HOURS_ENTITY)},
-            )
-        ] = selector.EntitySelector(
-            selector.EntitySelectorConfig(domain=["sensor", "input_number"]),
-        )
-
-    schema_dict[
+        ): int,
         vol.Optional(
             f"{CONF_END}_{CONF_MINUTES}",
             description={"suggested_value": end_offset.get(CONF_MINUTES)},
-        )
-    ] = int
+        ): int,
+    }
 
-    if allow_dynamic_entities:
-        schema_dict[
-            vol.Optional(
-                CONF_END_MINUTES_ENTITY,
-                description={
-                    "suggested_value": offset_data.get(CONF_END_MINUTES_ENTITY)
-                },
-            )
-        ] = selector.EntitySelector(
+    dynamic_schema_dict: dict[Any, Any] = {
+        vol.Optional(
+            CONF_START_HOURS_ENTITY,
+            description={"suggested_value": offset_data.get(CONF_START_HOURS_ENTITY)},
+        ): selector.EntitySelector(
             selector.EntitySelectorConfig(domain=["sensor", "input_number"]),
-        )
+        ),
+        vol.Optional(
+            CONF_START_MINUTES_ENTITY,
+            description={"suggested_value": offset_data.get(CONF_START_MINUTES_ENTITY)},
+        ): selector.EntitySelector(
+            selector.EntitySelectorConfig(domain=["sensor", "input_number"]),
+        ),
+        vol.Optional(
+            CONF_END_HOURS_ENTITY,
+            description={"suggested_value": offset_data.get(CONF_END_HOURS_ENTITY)},
+        ): selector.EntitySelector(
+            selector.EntitySelectorConfig(domain=["sensor", "input_number"]),
+        ),
+        vol.Optional(
+            CONF_END_MINUTES_ENTITY,
+            description={"suggested_value": offset_data.get(CONF_END_MINUTES_ENTITY)},
+        ): selector.EntitySelector(
+            selector.EntitySelectorConfig(domain=["sensor", "input_number"]),
+        ),
+    }
+
+    has_dynamic_entity = bool(
+        offset_data.get(CONF_START_HOURS_ENTITY)
+        or offset_data.get(CONF_START_MINUTES_ENTITY)
+        or offset_data.get(CONF_END_HOURS_ENTITY)
+        or offset_data.get(CONF_END_MINUTES_ENTITY)
+    )
+
+    schema_dict[vol.Required("dynamic_section")] = section(
+        vol.Schema(dynamic_schema_dict),
+        {"collapsed": not has_dynamic_entity},
+    )
 
     return vol.Schema(schema_dict)
+
+    # schema_dict = {
+    #     vol.Optional(
+    #         f"{CONF_START}_{CONF_HOURS}",
+    #         description={"suggested_value": start_offset.get(CONF_HOURS)},
+    #     ): int,
+    # }
+
+    # if allow_dynamic_entities:
+    #     schema_dict[
+    #         vol.Optional(
+    #             CONF_START_HOURS_ENTITY,
+    #             description={
+    #                 "suggested_value": offset_data.get(CONF_START_HOURS_ENTITY)
+    #             },
+    #         )
+    #     ] = selector.EntitySelector(
+    #         selector.EntitySelectorConfig(domain=["sensor", "input_number"]),
+    #     )
+
+    # schema_dict[
+    #     vol.Optional(
+    #         f"{CONF_START}_{CONF_MINUTES}",
+    #         description={"suggested_value": start_offset.get(CONF_MINUTES)},
+    #     )
+    # ] = int
+
+    # if allow_dynamic_entities:
+    #     schema_dict[
+    #         vol.Optional(
+    #             CONF_START_MINUTES_ENTITY,
+    #             description={
+    #                 "suggested_value": offset_data.get(CONF_START_MINUTES_ENTITY)
+    #             },
+    #         )
+    #     ] = selector.EntitySelector(
+    #         selector.EntitySelectorConfig(domain=["sensor", "input_number"]),
+    #     )
+
+    # schema_dict[
+    #     vol.Optional(
+    #         f"{CONF_END}_{CONF_HOURS}",
+    #         description={"suggested_value": end_offset.get(CONF_HOURS)},
+    #     )
+    # ] = int
+
+    # if allow_dynamic_entities:
+    #     schema_dict[
+    #         vol.Optional(
+    #             CONF_END_HOURS_ENTITY,
+    #             description={"suggested_value": offset_data.get(CONF_END_HOURS_ENTITY)},
+    #         )
+    #     ] = selector.EntitySelector(
+    #         selector.EntitySelectorConfig(domain=["sensor", "input_number"]),
+    #     )
+
+    # schema_dict[
+    #     vol.Optional(
+    #         f"{CONF_END}_{CONF_MINUTES}",
+    #         description={"suggested_value": end_offset.get(CONF_MINUTES)},
+    #     )
+    # ] = int
+
+    # if allow_dynamic_entities:
+    #     schema_dict[
+    #         vol.Optional(
+    #             CONF_END_MINUTES_ENTITY,
+    #             description={
+    #                 "suggested_value": offset_data.get(CONF_END_MINUTES_ENTITY)
+    #             },
+    #         )
+    #     ] = selector.EntitySelector(
+    #         selector.EntitySelectorConfig(domain=["sensor", "input_number"]),
+    #     )
+
+    # return vol.Schema(schema_dict)
 
 
 def _validate_and_clean_static_or_entity(
@@ -1058,14 +1115,26 @@ class CheapestHoursConfigFlowMixin:
             errors = _validate_basic_integer_fields(user_input)
             slot_errors = _validate_and_clean_number_of_slots(user_input)
             errors.update(slot_errors)
+
             if not errors:
                 # In Options Flow: close and save entry
                 if hasattr(self, "_config_entry"):
                     return self._save_options_entry(user_input)
 
-                # In Config Flow: go to advanced
+                # In Config Flow: close and save entry
                 self._config_data.update(user_input)
-                return await self.async_step_cheapest_hours_advanced()
+
+                unique_id = self._config_data[CONF_NAME].lower().replace(" ", "_")
+                self._config_data[CONF_UNIQUE_ID] = unique_id
+                self._config_data[CONF_ENTRY_TYPE] = ENTRY_TYPE_CHEAPEST_HOURS
+
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_configured()
+
+                return self.async_create_entry(
+                    title=self._config_data[CONF_NAME],
+                    data=self._config_data,
+                )
 
         existing_data = None
         if hasattr(self, "_config_entry"):
@@ -1082,10 +1151,10 @@ class CheapestHoursConfigFlowMixin:
     async def async_step_cheapest_hours_advanced(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Configure advanced cheapest hours settings."""
+        """Configure advanced cheapest hours settings (Options Flow only)."""
         errors: dict[str, str] = {}
-
-        sequential = self._config_data.get(CONF_SEQUENTIAL, False)
+        entry_data = dict(self._config_entry.data)
+        sequential = entry_data.get(CONF_SEQUENTIAL, False)
 
         if user_input is not None:
             if "dynamic_section" in user_input and isinstance(
@@ -1098,50 +1167,24 @@ class CheapestHoursConfigFlowMixin:
             errors.update(advanced_errors)
 
             if sequential:
-                # Flexible and continuous slots do not apply to sequential sensors; drop any
-                # flexible fields (including a previously stored config).
                 user_input.pop(CONF_MAX_NUMBER_OF_SLOTS, None)
                 user_input.pop(CONF_MAX_NUMBER_OF_SLOTS_ENTITY, None)
                 user_input.pop(CONF_FLEXIBLE_PRICE_LIMIT, None)
                 user_input.pop(CONF_FLEXIBLE_PRICE_LIMIT_ENTITY, None)
                 user_input.pop(CONF_ADD_FLEXIBLE, None)
-                self._config_data.pop(CONF_ADD_FLEXIBLE, None)
                 user_input.pop(CONF_MIN_SEQ_SLOTS, None)
-                self._config_data.pop(CONF_MIN_SEQ_SLOTS, None)
                 user_input.pop(CONF_NUMBER_OF_BLOCKS, None)
-                self._config_data.pop(CONF_NUMBER_OF_BLOCKS, None)
-
             else:
                 flexible_errors = _validate_and_build_add_flexible(
                     user_input,
-                    self._config_data.get(CONF_MTU) or 60,
+                    entry_data.get(CONF_MTU) or 60,
                 )
                 errors.update(flexible_errors)
 
             if not errors:
-                self._config_data.update(user_input)
+                return self._save_options_entry(user_input)
 
-                # In Options Flow: close and save entry
-                if hasattr(self, "_config_entry"):
-                    return self._save_options_entry(self._config_data)
-
-                unique_id = self._config_data[CONF_NAME].lower().replace(" ", "_")
-                self._config_data[CONF_UNIQUE_ID] = unique_id
-                self._config_data[CONF_ENTRY_TYPE] = ENTRY_TYPE_CHEAPEST_HOURS
-
-                await self.async_set_unique_id(unique_id)
-                self._abort_if_unique_id_configured()
-
-                return self.async_create_entry(
-                    title=self._config_data[CONF_NAME],
-                    data=self._config_data,
-                )
-
-        existing_data = None
-        if hasattr(self, "_config_entry"):
-            existing_data = {**self._config_entry.data}
-
-        merged_input = {**(existing_data or {}), **(user_input or {})}
+        merged_input = {**entry_data, **(user_input or {})}
 
         return self.async_show_form(
             step_id="cheapest_hours_advanced",
@@ -1152,67 +1195,40 @@ class CheapestHoursConfigFlowMixin:
     async def async_step_cheapest_hours_offset(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Configure offset settings for cheapest hours."""
+        """Configure offset settings for cheapest hours (Options Flow only)."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            allow_dynamic = self._config_data.get(CONF_ALLOW_DYNAMIC_ENTITIES, True)
-            if not allow_dynamic:
-                user_input.pop(CONF_START_HOURS_ENTITY, None)
-                user_input.pop(CONF_START_MINUTES_ENTITY, None)
-                user_input.pop(CONF_END_HOURS_ENTITY, None)
-                user_input.pop(CONF_END_MINUTES_ENTITY, None)
+            if "dynamic_section" in user_input and isinstance(
+                user_input["dynamic_section"], dict
+            ):
+                user_input.update(user_input.pop("dynamic_section"))
+
             errors = _validate_offset_integer_fields(user_input)
             offset_errors = _validate_and_clean_offset_fields(user_input)
             errors.update(offset_errors)
+
             if not errors:
                 offset, entities = _process_offset_input(user_input)
-                if offset:
-                    self._config_data[CONF_OFFSET] = offset
-                self._config_data.update(entities)
 
-                if hasattr(self, "_config_entry"):
-                    new_data = {
-                        **self._config_data,
-                        CONF_ENTRY_TYPE: ENTRY_TYPE_CHEAPEST_HOURS,
-                        CONF_UNIQUE_ID: self._config_entry.data.get(CONF_UNIQUE_ID),
-                        CONF_DATA_PROVIDER_TYPE: self._data_provider_type,
-                    }
+                # Bereid de op te slaan data voor en geef None op voor lege velden zodat ze gewist worden
+                save_data = {
+                    CONF_OFFSET: offset if offset else None,
+                    CONF_START_HOURS_ENTITY: entities.get(CONF_START_HOURS_ENTITY),
+                    CONF_START_MINUTES_ENTITY: entities.get(CONF_START_MINUTES_ENTITY),
+                    CONF_END_HOURS_ENTITY: entities.get(CONF_END_HOURS_ENTITY),
+                    CONF_END_MINUTES_ENTITY: entities.get(CONF_END_MINUTES_ENTITY),
+                }
+                return self._save_options_entry(save_data)
 
-                    self.hass.config_entries.async_update_entry(
-                        self._config_entry,
-                        title=new_data[CONF_NAME],
-                        data=new_data,
-                    )
-                    return self.async_create_entry(title="", data={})
+        offset_data = {
+            **self._config_entry.data.get(CONF_OFFSET, {}),
+            **self._config_entry.data,
+        }
+        merged_input = {**offset_data, **(user_input or {})}
 
-                unique_id = self._config_data[CONF_NAME].lower().replace(" ", "_")
-                self._config_data[CONF_UNIQUE_ID] = unique_id
-                self._config_data[CONF_ENTRY_TYPE] = ENTRY_TYPE_CHEAPEST_HOURS
-
-                await self.async_set_unique_id(unique_id)
-                self._abort_if_unique_id_configured()
-
-                return self.async_create_entry(
-                    title=self._config_data[CONF_NAME],
-                    data=self._config_data,
-                )
-
-        offset_data = {}
-        if hasattr(self, "_config_entry"):
-            offset_data = {
-                **self._config_entry.data.get(CONF_OFFSET, {}),
-                **self._config_entry.data,
-            }
-        else:
-            offset_data = {
-                **self._config_data.get(CONF_OFFSET, {}),
-                **self._config_data,
-            }
-
-        allow_dynamic = self._config_data.get(CONF_ALLOW_DYNAMIC_ENTITIES, True)
         return self.async_show_form(
             step_id="cheapest_hours_offset",
-            data_schema=_get_offset_schema(offset_data, allow_dynamic),
+            data_schema=_get_offset_schema(merged_input),
             errors=errors,
         )
