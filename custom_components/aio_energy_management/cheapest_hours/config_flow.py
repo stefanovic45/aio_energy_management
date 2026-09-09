@@ -350,32 +350,38 @@ def _get_cheapest_hours_advanced_schema(
                 mode=selector.NumberSelectorMode.BOX, step="any"
             )
         ),
-        vol.Optional(
-            CONF_FLEXIBLE_PRICE_LIMIT,
-            description={
-                "suggested_value": add_flexible.get(CONF_PRICE_LIMIT)
-                or (user_input.get(CONF_FLEXIBLE_PRICE_LIMIT) if user_input else None)
-            },
-        ): selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                mode=selector.NumberSelectorMode.BOX, step="any"
-            )
-        ),
-        vol.Optional(
-            CONF_MAX_NUMBER_OF_SLOTS,
-            description={
-                "suggested_value": add_flexible.get(CONF_MAX_NUMBER_OF_SLOTS)
-                or (user_input.get(CONF_MAX_NUMBER_OF_SLOTS) if user_input else None)
-            },
-        ): selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                min=1, mode=selector.NumberSelectorMode.BOX, step=1
-            )
-        ),
     }
 
     if not sequential:
         schema_dict[
+            vol.Optional(
+                CONF_FLEXIBLE_PRICE_LIMIT,
+                description={
+                    "suggested_value": add_flexible.get(CONF_PRICE_LIMIT)
+                    or (
+                        user_input.get(CONF_FLEXIBLE_PRICE_LIMIT)
+                        if user_input
+                        else None
+                    )
+                },
+            ) : selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    mode=selector.NumberSelectorMode.BOX, step="any"
+                )
+            ),
+            vol.Optional(
+                CONF_MAX_NUMBER_OF_SLOTS,
+                description={
+                    "suggested_value": add_flexible.get(CONF_MAX_NUMBER_OF_SLOTS)
+                    or (
+                        user_input.get(CONF_MAX_NUMBER_OF_SLOTS) if user_input else None
+                    )
+                },
+            ) : selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=1, mode=selector.NumberSelectorMode.BOX, step=1
+                )
+            ),
             vol.Optional(
                 CONF_MIN_SEQ_SLOTS,
                 description={
@@ -383,7 +389,7 @@ def _get_cheapest_hours_advanced_schema(
                     if user_input
                     else None
                 },
-            )
+            ),
         ] = selector.NumberSelector(
             selector.NumberSelectorConfig(
                 min=1, mode=selector.NumberSelectorMode.BOX, step=1
