@@ -188,13 +188,13 @@
         },
         "data_description": {
           "start_hours": "Static: Hours to add to start time",
-          "start_hours_entity": "Optional: Entity to dynamically set start hours offset (sensor or input_number). Overrides static value if set",
+          "start_hours_entity": "Optional: Entity to dynamically set start hours offset (sensor or input_number).",
           "start_minutes": "Static: Minutes to add to start time",
-          "start_minutes_entity": "Optional: Entity to dynamically set start minutes offset (sensor or input_number). Overrides static value if set",
+          "start_minutes_entity": "Optional: Entity to dynamically set start minutes offset (sensor or input_number).",
           "end_hours": "Static: Hours to add to end time",
-          "end_hours_entity": "Optional: Entity to dynamically set end hours offset (sensor or input_number). Overrides static value if set",
+          "end_hours_entity": "Optional: Entity to dynamically set end hours offset (sensor or input_number).",
           "end_minutes": "Static: Minutes to add to end time",
-          "end_minutes_entity": "Optional: Entity to dynamically set end minutes offset (sensor or input_number). Overrides static value if set"
+          "end_minutes_entity": "Optional: Entity to dynamically set end minutes offset (sensor or input_number)."
         }
       },
       "calendar": {
@@ -490,23 +490,33 @@
         "description": "Configure optional start and end time offsets",
         "data": {
           "start_hours": "Start offset hours (static value)",
-          "start_hours_entity": "Start offset hours (dynamic entity)",
           "start_minutes": "Start offset minutes (static value)",
-          "start_minutes_entity": "Start offset minutes (dynamic entity)",
           "end_hours": "End offset hours (static value)",
-          "end_hours_entity": "End offset hours (dynamic entity)",
-          "end_minutes": "End offset minutes (static value)",
-          "end_minutes_entity": "End offset minutes (dynamic entity)"
+          "end_minutes": "End offset minutes (static value)"
         },
         "data_description": {
           "start_hours": "Static: Hours to add to start time",
-          "start_hours_entity": "Optional: Entity to dynamically set start hours offset (sensor or input_number). Overrides static value if set",
           "start_minutes": "Static: Minutes to add to start time",
-          "start_minutes_entity": "Optional: Entity to dynamically set start minutes offset (sensor or input_number). Overrides static value if set",
           "end_hours": "Static: Hours to add to end time",
-          "end_hours_entity": "Optional: Entity to dynamically set end hours offset (sensor or input_number). Overrides static value if set",
-          "end_minutes": "Static: Minutes to add to end time",
-          "end_minutes_entity": "Optional: Entity to dynamically set end minutes offset (sensor or input_number). Overrides static value if set"
+          "end_minutes": "Static: Minutes to add to end time"
+        },
+        "sections":{
+          "dynamic_section": {
+            "name": "Dynamic entities (Optional)",
+            "description": "Configure dynamic entities. Make sure to clear the corresponding static value.",
+            "data": {
+              "start_hours_entity": "Start offset hours (dynamic entity)",
+              "start_minutes_entity": "Start offset minutes (dynamic entity)",
+              "end_hours_entity": "End offset hours (dynamic entity)",
+              "end_minutes_entity": "End offset minutes (dynamic entity)"
+            },
+            "data_description": {
+              "start_hours_entity": "Optional: Entity to dynamically set start hours offset (sensor or input_number).",
+              "start_minutes_entity": "Optional: Entity to dynamically set start minutes offset (sensor or input_number).",
+              "end_hours_entity": "Optional: Entity to dynamically set end hours offset (sensor or input_number).",
+              "end_minutes_entity": "Optional: Entity to dynamically set end minutes offset (sensor or input_number)."
+            }
+          }
         }
       },
       "cheapest_hours_options": {
@@ -541,7 +551,7 @@
         },
         "data_description": {
           "number_of_slots": "Static number of time slots to find (matches selected MTU). Leave at 0 to use entity instead",
-          "number_of_slots_entity": "Optional: Entity to dynamically set number of slots (sensor or input_number). Overrides static value if set",
+          "number_of_slots_entity": "Optional: Entity to dynamically set number of slots (sensor or input_number).",
           "first_hour": "Starting hour for calculation (0-23)",
           "last_hour": "Last hour for calculation (0-23)",
           "starting_today": "Include hours from today in calculation",
@@ -549,22 +559,22 @@
           "failsafe_starting_hour": "Fallback hour if price data unavailable",
           "inversed": "Find most expensive hours instead of cheapest",
           "trigger_hour": "Static: Earliest hour to create next cheapest hours",
-          "trigger_hour_entity": "Optional: Entity to dynamically set trigger hour (sensor or input_number). Overrides static value if set",
+          "trigger_hour_entity": "Optional: Entity to dynamically set trigger hour (sensor or input_number).",
           "price_limit": "Static: Only accept prices below this value (or above if inversed)",
-          "price_limit_entity": "Optional: Entity to dynamically set price limit (sensor or input_number). Overrides static value if set",
+          "price_limit_entity": "Optional: Entity to dynamically set price limit (sensor or input_number).",
           "calendar": "Show this entity in the calendar",
           "mtu": "Market time unit in minutes (15 or 60)",
           "retention_days": "Number of days to keep calendar history",
           "area": "Market area for Nord Pool official integration",
           "price_modifications": "Jinja2 template for price modifications (e.g., tariffs, taxes)",
           "start_hours": "Static: Hours to add to start time",
-          "start_hours_entity": "Optional: Entity to dynamically set start hours offset (sensor or input_number). Overrides static value if set",
+          "start_hours_entity": "Optional: Entity to dynamically set start hours offset (sensor or input_number).",
           "start_minutes": "Static: Minutes to add to start time",
-          "start_minutes_entity": "Optional: Entity to dynamically set start minutes offset (sensor or input_number). Overrides static value if set",
+          "start_minutes_entity": "Optional: Entity to dynamically set start minutes offset (sensor or input_number).",
           "end_hours": "Static: Hours to add to end time",
-          "end_hours_entity": "Optional: Entity to dynamically set end hours offset (sensor or input_number). Overrides static value if set",
+          "end_hours_entity": "Optional: Entity to dynamically set end hours offset (sensor or input_number).",
           "end_minutes": "Static: Minutes to add to end time",
-          "end_minutes_entity": "Optional: Entity to dynamically set end minutes offset (sensor or input_number). Overrides static value if set"
+          "end_minutes_entity": "Optional: Entity to dynamically set end minutes offset (sensor or input_number)."
         }
       },
       "calendar_options": {
