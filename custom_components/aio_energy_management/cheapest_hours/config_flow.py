@@ -1097,6 +1097,15 @@ class CheapestHoursConfigFlowMixin:
                         user_input,
                         [CONF_NUMBER_OF_SLOTS, CONF_NUMBER_OF_SLOTS_ENTITY],
                     )
+                    # Force optional sequential fields to empty when flowing from non-sequential to sequential
+                    if user_input.get(CONF_SEQUENTIAL) is True:
+                        user_input[CONF_MIN_SEQ_SLOTS] = None
+                        user_input[CONF_NUMBER_OF_BLOCKS] = None
+                        user_input[CONF_ADD_FLEXIBLE] = None
+                        user_input[CONF_MAX_NUMBER_OF_SLOTS] = None
+                        user_input[CONF_MAX_NUMBER_OF_SLOTS_ENTITY] = None
+                        user_input[CONF_FLEXIBLE_PRICE_LIMIT] = None
+                        user_input[CONF_FLEXIBLE_PRICE_LIMIT_ENTITY] = None
                     return self._save_options_entry(user_input)
 
                 # In Config Flow: close and save entry
