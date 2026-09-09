@@ -44,6 +44,7 @@ from .helpers import (
     _coerce_mtu,
     _normalize_optional_keys,
     _process_offset_input,
+    sanitize_cheapest_hours_input,
     _validate_advanced_integer_fields,
     _validate_and_build_add_flexible,
     _validate_and_clean_advanced_fields,
@@ -74,9 +75,11 @@ class CheapestHoursConfigFlowMixin:
 
     def _save_options_entry(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Helper to save updated data directly during Options Flow."""
+        cleaned_input = sanitize_cheapest_hours_input(user_input)
+
         new_data = {
             **self._config_entry.data,
-            **user_input,
+            **cleaned_input,
         }
         self.hass.config_entries.async_update_entry(
             self._config_entry,
@@ -226,13 +229,14 @@ class CheapestHoursConfigFlowMixin:
                 unique_id = self._config_data[CONF_NAME].lower().replace(" ", "_")
                 self._config_data[CONF_UNIQUE_ID] = unique_id
                 self._config_data[CONF_ENTRY_TYPE] = ENTRY_TYPE_CHEAPEST_HOURS
+                cleaned_data = sanitize_cheapest_hours_input(self._config_data)
 
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=self._config_data[CONF_NAME],
-                    data=self._config_data,
+                    title=cleaned_data[CONF_NAME],
+                    data=cleaned_data,
                 )
 
         existing_data = None

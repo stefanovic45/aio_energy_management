@@ -69,6 +69,32 @@ def _normalize_optional_keys(user_input: dict[str, Any], keys: list[str]) -> Non
         user_input.setdefault(key, None)
 
 
+def sanitize_cheapest_hours_input(user_input: dict[str, Any]) -> dict[str, Any]:
+    """Convert form input numbers from float to int before saving."""
+    cleaned = dict(user_input)
+    int_keys = [
+        CONF_FIRST_HOUR,
+        CONF_LAST_HOUR,
+        CONF_NUMBER_OF_SLOTS,
+        CONF_FAILSAFE_STARTING_HOUR,
+        CONF_TRIGGER_HOUR,
+        CONF_MIN_SEQ_SLOTS,
+        CONF_NUMBER_OF_BLOCKS,
+        CONF_MAX_NUMBER_OF_SLOTS,
+        CONF_START_HOURS_ENTITY,
+        CONF_START_MINUTES_ENTITY,
+        CONF_END_HOURS_ENTITY,
+        CONF_END_MINUTES_ENTITY,
+    ]
+    for key in int_keys:
+        if key in cleaned and cleaned[key] is not None:
+            try:
+                cleaned[key] = int(cleaned[key])
+            except ValueError, TypeError:
+                pass
+    return cleaned
+
+
 def _validate_and_clean_static_or_entity(
     user_input: dict[str, Any],
     static_key: str,
