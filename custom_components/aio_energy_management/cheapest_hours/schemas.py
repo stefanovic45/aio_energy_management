@@ -1,6 +1,6 @@
 # custom_components/aio_energy_management/schemas.py
 
-# 1. Selectors & Helpers (_opt, _req)
+# 1. Selectors & Helpers for schemas (_opt, _req)
 # 2. Basic / Advanced / Offset Schema's (_get_cheapest_hours_basic_schema, etc.)
 # 3. Provider Schema's (_get_nordpool_schema, etc.)
 

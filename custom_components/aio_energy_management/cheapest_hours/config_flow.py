@@ -28,6 +28,7 @@ from custom_components.aio_energy_management.const import (
     CONF_PRICE_LIMIT,
     CONF_PRICE_LIMIT_ENTITY,
     CONF_PRICE_MODIFICATIONS,
+    CONF_RETENTION_DAYS,
     CONF_SEQUENTIAL,
     CONF_START_HOURS_ENTITY,
     CONF_START_MINUTES_ENTITY,
@@ -294,6 +295,7 @@ class CheapestHoursConfigFlowMixin:
                         CONF_MAX_NUMBER_OF_SLOTS,
                         CONF_MAX_NUMBER_OF_SLOTS_ENTITY,
                         CONF_ADD_FLEXIBLE,
+                        CONF_RETENTION_DAYS,
                     ],
                 )
                 return self._save_options_entry(user_input)
