@@ -393,13 +393,12 @@ def _get_cheapest_hours_advanced_schema(
                     if user_input
                     else None
                 },
-            ),
+            )
         ] = selector.NumberSelector(
             selector.NumberSelectorConfig(
                 min=1, mode=selector.NumberSelectorMode.BOX, step=1
             )
         )
-
         schema_dict[
             vol.Optional(
                 CONF_NUMBER_OF_BLOCKS,
