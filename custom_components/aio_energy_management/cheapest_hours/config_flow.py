@@ -317,7 +317,11 @@ def _get_cheapest_hours_advanced_schema(
                 if user_input
                 else None
             },
-        ): int,
+        ): selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                min=0, max=23, mode=selector.NumberSelectorMode.BOX
+            )
+        ),
         vol.Optional(
             CONF_TRIGGER_HOUR,
             description={
@@ -325,7 +329,11 @@ def _get_cheapest_hours_advanced_schema(
                 if user_input
                 else None
             },
-        ): int,
+        ): selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                min=0, max=23, mode=selector.NumberSelectorMode.BOX
+            )
+        ),
         vol.Optional(
             CONF_PRICE_LIMIT,
             description={
@@ -333,21 +341,33 @@ def _get_cheapest_hours_advanced_schema(
                 if user_input
                 else None
             },
-        ): vol.Coerce(float),
+        ): selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                mode=selector.NumberSelectorMode.BOX, step="any"
+            )
+        ),
         vol.Optional(
             CONF_FLEXIBLE_PRICE_LIMIT,
             description={
                 "suggested_value": add_flexible.get(CONF_PRICE_LIMIT)
                 or (user_input.get(CONF_FLEXIBLE_PRICE_LIMIT) if user_input else None)
             },
-        ): vol.Coerce(float),
+        ): selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                mode=selector.NumberSelectorMode.BOX, step="any"
+            )
+        ),
         vol.Optional(
             CONF_MAX_NUMBER_OF_SLOTS,
             description={
                 "suggested_value": add_flexible.get(CONF_MAX_NUMBER_OF_SLOTS)
                 or (user_input.get(CONF_MAX_NUMBER_OF_SLOTS) if user_input else None)
             },
-        ): int,
+        ): selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                min=1, mode=selector.NumberSelectorMode.BOX, step=1
+            )
+        ),
     }
 
     if not sequential:
@@ -360,7 +380,11 @@ def _get_cheapest_hours_advanced_schema(
                     else None
                 },
             )
-        ] = int
+        ] = selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                min=1, mode=selector.NumberSelectorMode.BOX, step=1
+            )
+        )
 
         schema_dict[
             vol.Optional(
@@ -371,7 +395,11 @@ def _get_cheapest_hours_advanced_schema(
                     else None
                 },
             )
-        ] = int
+        ] = selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                min=1, mode=selector.NumberSelectorMode.BOX, step=1
+            )
+        )
 
     schema_dict.update(
         {
@@ -383,6 +411,7 @@ def _get_cheapest_hours_advanced_schema(
                     min=1,
                     max=365,
                     mode=selector.NumberSelectorMode.BOX,
+                    step=1,
                 )
             ),
             vol.Optional(
@@ -979,6 +1008,13 @@ def _validate_offset_integer_fields(user_input: dict[str, Any]) -> dict[str, str
     return errors
 
 
+def _normalize_optional_keys(user_input: dict[str, Any], keys: list[str]) -> None:
+    """Ensure every optional key is present (as None) so clearing it in the
+    UI actually overwrites the stored value instead of being merged away."""
+    for key in keys:
+        user_input.setdefault(key, None)
+
+
 class CheapestHoursConfigFlowMixin:
     """Mixin for cheapest hours config flow steps."""
 
@@ -1048,6 +1084,7 @@ class CheapestHoursConfigFlowMixin:
 
             # In Options Flow: close and save entry
             if hasattr(self, "_config_entry"):
+                _normalize_optional_keys(user_input, [CONF_AREA])
                 return self._save_options_entry(user_input)
 
             # In Config Flow: go to advanced
@@ -1119,6 +1156,10 @@ class CheapestHoursConfigFlowMixin:
             if not errors:
                 # In Options Flow: close and save entry
                 if hasattr(self, "_config_entry"):
+                    _normalize_optional_keys(
+                        user_input,
+                        [CONF_NUMBER_OF_SLOTS, CONF_NUMBER_OF_SLOTS_ENTITY],
+                    )
                     return self._save_options_entry(user_input)
 
                 # In Config Flow: close and save entry
@@ -1182,6 +1223,22 @@ class CheapestHoursConfigFlowMixin:
                 errors.update(flexible_errors)
 
             if not errors:
+                _normalize_optional_keys(
+                    user_input,
+                    [
+                        CONF_FAILSAFE_STARTING_HOUR,
+                        CONF_TRIGGER_HOUR,
+                        CONF_TRIGGER_HOUR_ENTITY,
+                        CONF_PRICE_LIMIT,
+                        CONF_PRICE_LIMIT_ENTITY,
+                        CONF_MIN_SEQ_SLOTS,
+                        CONF_NUMBER_OF_BLOCKS,
+                        CONF_PRICE_MODIFICATIONS,
+                        CONF_MAX_NUMBER_OF_SLOTS,
+                        CONF_MAX_NUMBER_OF_SLOTS_ENTITY,
+                        CONF_ADD_FLEXIBLE,
+                    ],
+                )
                 return self._save_options_entry(user_input)
 
         merged_input = {**entry_data, **(user_input or {})}
@@ -1211,7 +1268,6 @@ class CheapestHoursConfigFlowMixin:
             if not errors:
                 offset, entities = _process_offset_input(user_input)
 
-                # Bereid de op te slaan data voor en geef None op voor lege velden zodat ze gewist worden
                 save_data = {
                     CONF_OFFSET: offset if offset else None,
                     CONF_START_HOURS_ENTITY: entities.get(CONF_START_HOURS_ENTITY),
