@@ -364,11 +364,13 @@ def _get_cheapest_hours_advanced_schema(
                         else None
                     )
                 },
-            ) : selector.NumberSelector(
-                selector.NumberSelectorConfig(
-                    mode=selector.NumberSelectorMode.BOX, step="any"
-                )
-            ),
+            )
+        ] = selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                mode=selector.NumberSelectorMode.BOX, step="any"
+            )
+        )
+        schema_dict[
             vol.Optional(
                 CONF_MAX_NUMBER_OF_SLOTS,
                 description={
@@ -377,11 +379,13 @@ def _get_cheapest_hours_advanced_schema(
                         user_input.get(CONF_MAX_NUMBER_OF_SLOTS) if user_input else None
                     )
                 },
-            ) : selector.NumberSelector(
-                selector.NumberSelectorConfig(
-                    min=1, mode=selector.NumberSelectorMode.BOX, step=1
-                )
-            ),
+            )
+        ] = selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                min=1, mode=selector.NumberSelectorMode.BOX, step=1
+            )
+        )
+        schema_dict[
             vol.Optional(
                 CONF_MIN_SEQ_SLOTS,
                 description={
