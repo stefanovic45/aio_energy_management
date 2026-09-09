@@ -266,13 +266,8 @@ class CheapestHoursConfigFlowMixin:
             errors.update(advanced_errors)
 
             if sequential:
-                user_input.pop(CONF_MAX_NUMBER_OF_SLOTS, None)
-                user_input.pop(CONF_MAX_NUMBER_OF_SLOTS_ENTITY, None)
                 user_input.pop(CONF_FLEXIBLE_PRICE_LIMIT, None)
                 user_input.pop(CONF_FLEXIBLE_PRICE_LIMIT_ENTITY, None)
-                user_input.pop(CONF_ADD_FLEXIBLE, None)
-                user_input.pop(CONF_MIN_SEQ_SLOTS, None)
-                user_input.pop(CONF_NUMBER_OF_BLOCKS, None)
             else:
                 flexible_errors = _validate_and_build_add_flexible(
                     user_input,
