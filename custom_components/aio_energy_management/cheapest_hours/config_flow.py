@@ -238,6 +238,10 @@ def _get_cheapest_hours_basic_schema(
     user_input: dict[str, Any] | None = None,
 ) -> vol.Schema:
     """Get basic cheapest hours configuration schema."""
+    has_dynamic_entity = bool(
+        user_input and user_input.get(CONF_NUMBER_OF_SLOTS_ENTITY)
+    )
+
     schema_dict = {
         vol.Required(
             CONF_NAME,
@@ -290,7 +294,7 @@ def _get_cheapest_hours_basic_schema(
                     ),
                 }
             ),
-            {"collapsed": True},  # Standaard ingeklapt in de UI
+            {"collapsed": not has_dynamic_entity},
         ),
     }
 
@@ -405,7 +409,7 @@ def _get_cheapest_hours_advanced_schema(
         {
             vol.Optional(
                 CONF_RETENTION_DAYS,
-                default=user_input.get(CONF_RETENTION_DAYS) if user_input else 1,
+                default=(user_input or {}).get(CONF_RETENTION_DAYS) or 1,
             ): selector.NumberSelector(
                 selector.NumberSelectorConfig(
                     min=1,
