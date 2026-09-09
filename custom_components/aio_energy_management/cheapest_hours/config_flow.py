@@ -1206,7 +1206,7 @@ class CheapestHoursConfigFlowMixin:
                 return self._save_options_entry(save_data)
 
         offset_data = {
-            **self._config_entry.data.get(CONF_OFFSET, {}),
+            **(self._config_entry.data.get(CONF_OFFSET) or {}),
             **self._config_entry.data,
         }
         merged_input = {**offset_data, **(user_input or {})}
