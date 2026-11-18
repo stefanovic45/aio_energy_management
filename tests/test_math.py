@@ -1195,46 +1195,84 @@ def test_cheapest_hours_min_seq_slots_scenarios(
         assert slots_count >= min_seq_slots
 
 
-def test_price_limit_reduces_slots_to_respect_min_seq() -> None:
-    prices = [
-        95.75,
-        96.43,
-        99.12,
-        97.17,
-        98.36,
-        88.70,
-        84.91,
-        86.20,
-        81.82,
-        78.38,
-        75.84,
-        80.45,
-        82.29,
-        82.35,
-        76.78,
-        70.47,
-        67.09,
-        67.67,
-        71.06,
-        70.55,
-        81.58,
-        82.36,
-        84.34,
-        95.94,
-        85.62,
-        99.84,
-        109.54,
-        123.34,
-        125.17,
-        124.79,
-    ]
+PRICES_TEST_DATA = [
+    95.75,
+    96.43,
+    99.12,
+    97.17,
+    98.36,
+    88.70,
+    84.91,
+    86.20,
+    81.82,
+    78.38,
+    75.84,
+    80.45,
+    82.29,
+    82.35,
+    76.78,
+    70.47,
+    67.09,
+    67.67,
+    71.06,
+    70.55,
+    81.58,
+    82.36,
+    84.34,
+    95.94,
+    85.62,
+    99.84,
+    109.54,
+    123.34,
+    125.17,
+    124.79,
+]
+
+
+def test_flexible_price_limit_reduces_slots_to_respect_min_seq() -> None:
+    """Flexible slots must stay within the limit and still respect min_seq_slots.
+
+    number_of_slots=2 (base) is extended by 6 flexible slots within the limit (80),
+    so 8 slots are requested. Only 02:15-02:45 (a block of 2, too short) and
+    03:30-05:00 (a block of 6) lie within the limit. 8 slots are impossible, and
+    the base slots fit within the limit, so the budget is 0: only 03:30-05:00 remains.
+    """
+    data = [{"price": p} for p in PRICES_TEST_DATA]
+
+    result = _select_slots_with_min_seq_slot_size(
+        data,
+        number_of_slots=8,  # actual_number_of_slots: 2 base + 6 flexible
+        min_seq_slots=4,
+        max_number_of_slots=48,
+        flexible_price_limit=80,
+        flexible_base_slots=2,
+    )
+
+    assert [d["price"] for d in result] == PRICES_TEST_DATA[14:20]  # 03:30-05:00
+    assert all(d["price"] <= 80 for d in result)
+
+
+def test_flexible_price_limit_budget_allows_base_slots_beyond_limit() -> None:
+    """Base slots may exceed the flexible limit when too few slots are within it.
+
+    Only 5 slots are within the limit (50), but 8 base slots are required. The
+    budget is therefore 8 - 5 = 3: at most 3 selected slots may lie beyond the
+    limit. The cheapest single block of 8 is index 1-8.
+    """
+    prices = [100, 90, 10, 10, 10, 10, 10, 60, 70, 100, 100, 100]
     data = [{"price": p} for p in prices]
 
     result = _select_slots_with_min_seq_slot_size(
-        data, number_of_slots=8, min_seq_slots=4, price_limit=80
+        data,
+        number_of_slots=8,
+        min_seq_slots=4,
+        max_number_of_slots=12,
+        flexible_price_limit=50,
+        flexible_base_slots=8,
     )
 
-    assert [d["price"] for d in result] == prices[14:20]  # 03:30-05:00
+    assert [d["price"] for d in result] == prices[1:9]
+    assert sum(1 for d in result if d["price"] > 50) <= 3
 
 
 @pytest.mark.parametrize(

@@ -435,6 +435,10 @@ def calculate_non_sequential_cheapest_hours(
             max_seq_slots=max_seq_slots,
             inversed=inversed,
             price_limit=price_limit,
+            max_number_of_slots=max_number_of_slots,
+            flexible_price_limit=flexible_price_limit,
+            max_price_delta=max_price_delta,
+            flexible_base_slots=len(base_part),
         )
 
     data.sort(key=lambda x: x["start"])
@@ -551,6 +555,10 @@ def _select_slots_with_min_seq_slot_size(
     max_seq_slots: int | None = None,
     inversed: bool = False,
     price_limit: float | None = None,
+    max_number_of_slots: int | None = None,
+    flexible_price_limit: float | None = None,
+    max_price_delta: float | None = None,
+    flexible_base_slots: int = 0,
 ) -> list[dict]:
     """Select slots so that every consecutive block has a length within
     [min_seq_slots, max_seq_slots], only using slots that satisfy price_limit.
@@ -581,6 +589,32 @@ def _select_slots_with_min_seq_slot_size(
     hi = max_seq_slots if max_seq_slots is not None else n
     mult = -1 if inversed else 1
 
+    # Flexible price limit: resolved here, so callers only pass the raw settings.
+    # Only active when flexible slots are enabled (same rule as _select_flexible_slots).
+    flexible_limit = (
+        _get_flexible_limit(
+            [item["price"] for item in data],
+            flexible_price_limit,
+            max_price_delta,
+            inversed,
+        )
+        if max_number_of_slots is not None
+        else None
+    )
+
+    if flexible_limit is None:
+        beyond = [False] * n
+        budget = 0
+    else:
+        if inversed:
+            beyond = [item["price"] < flexible_limit for item in data]
+        else:
+            beyond = [item["price"] > flexible_limit for item in data]
+        # Slots beyond the limit are only allowed to fill up the base slots when
+        # there are not enough slots within the limit.
+        within_limit = sum(1 for ok, b in zip(eligible, beyond) if ok and not b)
+        budget = max(0, flexible_base_slots - within_limit)
+
     # run[i] = number of consecutive eligible slots starting at i
     run = [0] * (n + 1)
     for i in range(n - 1, -1, -1):
@@ -588,41 +622,44 @@ def _select_slots_with_min_seq_slot_size(
 
     # Prefix sums of (signed) prices for O(1) block cost in order to calculate prices efficiently
     prefix = [0.0]
-    for item in data:
+    beyond_prefix = [0]
+    for item, b in zip(data, beyond):
         prefix.append(prefix[-1] + item["price"] * mult)
+        beyond_prefix.append(beyond_prefix[-1] + (1 if b else 0))
 
     # Setup Dynamic Programming tables
     INF = float("inf")
-    # dp[i][k]: minimal cost to pick k more slots from slots i..n-1,
-    # given slot i-1 is NOT selected (or i == 0).
-    dp = [[INF] * (target + 1) for _ in range(n + 1)]
-    choice = [
-        [0] * (target + 1) for _ in range(n + 1)
-    ]  # 0 = skip slot i, L>0 = block of length L
-    dp[n][0] = 0.0
+    # dp[i][k][r]: minimal cost to pick exactly k slots from i..n-1, given slot i-1
+    # is NOT selected (or i == 0), with at most r slots beyond the soft limit.
+    dp = [[[INF] * (budget + 1) for _ in range(target + 1)] for _ in range(n + 1)]
+    choice = [[[0] * (budget + 1) for _ in range(target + 1)] for _ in range(n + 1)]
+    for r in range(budget + 1):
+        dp[n][0][r] = 0.0
 
     # Start creating actual blocks
     for i in range(n - 1, -1, -1):
         for k in range(target + 1):
-            best = dp[i + 1][k]  # skip slot i
-            best_choice = 0
+            for r in range(budget + 1):
+                best = dp[i + 1][k][r]  # skip slot i
+                best_choice = 0
 
-            # Start a block of length L at i (only over eligible slots),
-            # followed by a mandatory gap so blocks never merge.
-            for L in range(lo, min(hi, k, run[i]) + 1):
-                rest = dp[min(i + L + 1, n)][k - L]
-                if rest == INF:
-                    continue
-                cost = prefix[i + L] - prefix[i] + rest
-                if cost < best:
-                    best = cost
-                    best_choice = L
+                for L in range(lo, min(hi, k, run[i]) + 1):
+                    c = beyond_prefix[i + L] - beyond_prefix[i]
+                    if c > r:
+                        break  # c only grows with L
+                    rest = dp[min(i + L + 1, n)][k - L][r - c]
+                    if rest == INF:
+                        continue
+                    cost = prefix[i + L] - prefix[i] + rest
+                    if cost < best:
+                        best = cost
+                        best_choice = L
 
-            dp[i][k] = best
-            choice[i][k] = best_choice
+                dp[i][k][r] = best
+                choice[i][k][r] = best_choice
 
     # Largest feasible number of slots (k > 0); cost is already minimal for that k
-    best_k = next((k for k in range(target, 0, -1) if dp[0][k] < INF), 0)
+    best_k = next((k for k in range(target, 0, -1) if dp[0][k][budget] < INF), 0)
 
     if best_k == 0:
         # Constraints cannot be satisfied (e.g. number_of_slots < min_seq_slots):
@@ -633,13 +670,14 @@ def _select_slots_with_min_seq_slot_size(
 
     # Reconstruct selection
     selected: list[int] = []
-    i, k = 0, best_k
+    i, k, r = 0, best_k, budget
     while i < n and k > 0:
-        L = choice[i][k]
+        L = choice[i][k][r]
         if L == 0:
             i += 1
         else:
             selected.extend(range(i, i + L))
+            r -= beyond_prefix[i + L] - beyond_prefix[i]
             k -= L
             i = min(i + L + 1, n)
 
